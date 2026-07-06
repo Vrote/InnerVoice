@@ -1,0 +1,49 @@
+# ── Python ────────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+
+# Virtual environment
+backend/venv/
+venv/
+.env
+
+# Database files
+*.db
+*.db-shm
+*.db-wal
+
+# ChromaDB
+backend/chroma_db/
+chroma_db/
+
+# Logs
+*.log
+
+# ── Node / Next.js ────────────────────────────────────────────────────────────
+node_modules/
+frontend/.next/
+frontend/out/
+frontend/.env.local
+frontend/tsconfig.tsbuildinfo
+
+# ── OS ────────────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── IDE ───────────────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ── Temp ─────────────────────────────────────────────────────────────────────
+nextjs-init-temp/
+prompt.txt

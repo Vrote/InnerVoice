@@ -1,0 +1,137 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,300;0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700;1,14..32,400&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  html {
+    font-family: 'Inter', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    background-color: #0f0f0f;
+    color: #e2e8f0;
+    min-height: 100vh;
+  }
+
+  ::-webkit-scrollbar       { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(124, 106, 247, 0.25);
+    border-radius: 2px;
+  }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(124, 106, 247, 0.5); }
+}
+
+@layer components {
+  /* ── Glassmorphism panel ─────────────────────────────── */
+  .glass-panel {
+    @apply bg-white/[0.04] backdrop-blur-md;
+  }
+
+  /* ── Primary button ──────────────────────────────────── */
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2
+           px-5 py-2.5 rounded-xl
+           bg-gradient-to-r from-violet-600 to-indigo-600
+           hover:from-violet-500 hover:to-indigo-500
+           text-white text-sm font-semibold
+           shadow-lg shadow-violet-500/20
+           hover:shadow-violet-500/30
+           active:scale-[0.97]
+           transition-all duration-200
+           disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100;
+  }
+
+  /* ── Secondary button ────────────────────────────────── */
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2
+           px-5 py-2.5 rounded-xl
+           bg-white/5 hover:bg-white/10
+           border border-white/10 hover:border-white/20
+           text-slate-300 text-sm font-medium
+           transition-all duration-200
+           disabled:opacity-40 disabled:cursor-not-allowed;
+  }
+
+  /* ── Text input field ────────────────────────────────── */
+  .input-field {
+    @apply bg-white/5 border border-white/10 rounded-xl
+           px-4 py-2.5 text-sm text-white
+           placeholder-slate-600
+           outline-none
+           focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/20
+           transition-all duration-200;
+  }
+
+  /* ── Chat bubbles ────────────────────────────────────── */
+  .bubble-user {
+    @apply bg-[#1e1b38] border border-violet-500/20 rounded-2xl rounded-br-sm
+           px-4 py-3 text-sm text-slate-100 leading-relaxed max-w-[78%] self-end
+           shadow-md shadow-violet-900/20;
+  }
+
+  .bubble-ai {
+    @apply bg-[#161616] border border-white/[0.06] rounded-2xl rounded-bl-sm
+           px-4 py-3 text-sm text-slate-200 leading-relaxed max-w-[78%] self-start
+           shadow-md;
+  }
+
+  /* ── Emotion chip ────────────────────────────────────── */
+  .emotion-chip {
+    @apply inline-flex items-center gap-1 px-2.5 py-0.5
+           rounded-full text-xs font-medium
+           bg-violet-500/10 text-violet-300 border border-violet-500/20;
+  }
+
+  /* ── Card ────────────────────────────────────────────── */
+  .card {
+    @apply glass-panel rounded-2xl border border-white/[0.07]
+           shadow-xl shadow-black/40;
+  }
+}
+
+@layer utilities {
+  /* ── Fade / slide animations ─────────────────────────── */
+  .animate-fadeIn  { animation: fadeIn  0.35s ease-out both; }
+  .animate-slideUp { animation: slideUp 0.4s  ease-out both; }
+  .animate-pulse-slow { animation: pulse 3s cubic-bezier(0.4,0,0.6,1) infinite; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(18px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── Typewriter cursor ───────────────────────────────── */
+  .typewriter-cursor::after {
+    content: '▋';
+    animation: blink 1s step-end infinite;
+    color: #7c6af7;
+    margin-left: 1px;
+  }
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0; }
+  }
+
+  /* ── Gradient text ───────────────────────────────────── */
+  .text-gradient {
+    @apply bg-gradient-to-r from-violet-400 to-indigo-400 bg-clip-text text-transparent;
+  }
+
+  /* ── Subtle glow ─────────────────────────────────────── */
+  .glow-violet { box-shadow: 0 0 60px rgba(124, 106, 247, 0.12); }
+}
