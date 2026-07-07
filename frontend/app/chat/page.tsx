@@ -200,12 +200,6 @@ function AIBubble({ msg, onReply }: { msg: ChatMessage; onReply?: (q: string) =>
                   </div>
                 </div>
               ))}
-              {msg.tools_used?.map((t, i) => (
-                <div key={`t-${i}`} className="flex items-center gap-2">
-                  <div className="w-1.5 h-1.5 rounded-full bg-indigo-500/60 flex-shrink-0" />
-                  <span className="text-xs text-slate-500 font-mono">{t}</span>
-                </div>
-              ))}
             </div>
           )}
         </div>

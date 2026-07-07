@@ -19,7 +19,7 @@ graph TD
     User([User Client]) -->|1. Submit Journal/Chat| API[FastAPI Server]
     API -->|2. Start Graph/Load State| Orchestrator[LangGraph Orchestrator]
     Orchestrator -->|3. Plan Steps| ExecutionLoop[Tool Execution Loop]
-    ExecutionLoop -->|Call Tools| Tools[14 AI Tools]
+    ExecutionLoop -->|Call Tools| Tools[12 AI Tools]
     Tools -->|Query/Save DB| SQLite[(SQLite DB)]
     Tools -->|Vector Search| Chroma[(ChromaDB Vector Store)]
     ExecutionLoop -->|4. Reflect & Check| ReflectNode{Needs Clarification?}

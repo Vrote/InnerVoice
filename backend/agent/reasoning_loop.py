@@ -124,18 +124,19 @@ Relevant memories: {memories_text}
 Return ONLY valid JSON:
 {{
   "reasoning": "Brief explanation of your plan",
-  "tools_to_run": ["voice_profile", "memory_retrieve", "emotion_analyze", "memory_save"],
+  "tools_to_run": ["voice_profile", "memory_retrieve", "emotion_analyze"],
   "needs_followup": false
 }}
 
 Rules:
-- Always run voice_profile, memory_retrieve, emotion_analyze
-- Run memory_save to persist important revelations
-- Run goal_tracker if user mentions achievements, goals, or setbacks
-- Run pattern_detect only if user seems to repeat a theme
-- Run followup_question when user is vague, distressed, or mentions something unresolved
-- Run plan_generator only when user asks "what should I do" or expresses a clear desire to act
-- Never run more than 7 tools total"""
+- Always run voice_profile, memory_retrieve, emotion_analyze.
+- Run memory_save to persist important new factual revelations (e.g. details about relationships, preferences, job, etc.).
+- Run goal_tracker if user mentions achievements, goals, or setbacks.
+- Run pattern_detect only if user seems to repeat a theme.
+- CRITICAL: Run followup_question and set "needs_followup" to true when the user's message is vague, contains unresolved emotional issues, or uses context-free pronouns (like "they", "them", "she", "he", "him", "her", "that", "this", "it") without a clear referent in the immediate message or conversation history.
+- Run plan_generator only when user asks "what should I do" or expresses a clear desire to act.
+- Never run more than 7 tools total.
+- Do NOT assume, invent, or hallucinate facts about the user's past if no memories are retrieved and conversation history is empty."""
 
     try:
         res_text = await run_llq_call(prompt, orchestrator=True, json_mode=True)
@@ -144,11 +145,17 @@ Rules:
         logger.error(f"plan_node LLM error: {e}")
         res_json = {
             "reasoning": "Fallback plan due to LLM error.",
-            "tools_to_run": ["voice_profile", "memory_retrieve", "emotion_analyze", "memory_save"],
+            "tools_to_run": ["voice_profile", "memory_retrieve", "emotion_analyze"],
             "needs_followup": False
         }
 
     valid_tools = [t for t in res_json.get("tools_to_run", []) if t in TOOL_REGISTRY]
+    
+    # Programmatic bridge to guarantee followup_question tool runs if flagged
+    if res_json.get("needs_followup") is True:
+        if "followup_question" not in valid_tools:
+            valid_tools.append("followup_question")
+
     state["orchestrator_plan"] = res_json
     state["action_plan"]       = valid_tools
     state["current_step"]      = "plan"
@@ -278,7 +285,7 @@ I'm here. Tell me what's happening — one small piece at a time. 💙"""
         state["final_response"] = crisis_response
     elif waiting and followup_q:
         # Partial response + followup question
-        prompt = f"""You are InnerVoice — the user's deeply personal AI companion.
+        prompt = f"""You are InnerVoice — the user's deeply personal AI companion. Think like an empathetic, skilled psychologist/counselor, but communicate with the warmth, casualness, and intimacy of a close friend or the user's own inner self-reflection. Your goal is to guide the user to explore and resolve their struggles without sounding clinical or robotic.
 
 Your response style (CRITICAL — mirror this exactly):
 {voice_profile.get("response_style_instructions", "Be warm, personal, and casual.")}
@@ -292,7 +299,7 @@ Relevant memories: {[m.get("text","") for m in memories[:3]]}
 
 Write a SHORT (2-4 sentence) warm acknowledgment of their message.
 Then naturally transition to asking them this follow-up: "{followup_q}"
-Do NOT number anything or use bullet points. Write like a human friend."""
+Do NOT number anything or use bullet points. Write like a human friend or their own supportive inner voice."""
 
         try:
             response = await run_llq_call(prompt, orchestrator=True, json_mode=False)
@@ -314,7 +321,7 @@ Do NOT number anything or use bullet points. Write like a human friend."""
         if reflection_data.get("prompts"):
             extras.append(f"Reflections: {'; '.join(reflection_data['prompts'][:2])}")
 
-        prompt = f"""You are InnerVoice — the user's deeply personal AI companion. You have known them for a while.
+        prompt = f"""You are InnerVoice — the user's deeply personal AI companion. You have known them for a while. Think like an empathetic, skilled psychologist/counselor to validate their experiences and help them address their root problems, but express yourself with the warmth, comfort, and directness of a close friend or their own supportive inner self-talk. The user should feel like they are talking to a trusted companion or reflecting inward, not talking to a clinical therapist or AI assistant.
 
 Your response style (CRITICAL — mirror this exactly):
 {voice_profile.get("response_style_instructions", "Be warm, personal, and conversational.")}
@@ -333,13 +340,13 @@ Context you've gathered:
 - Additional context: {'; '.join(extras) if extras else "None"}
 
 Write a response that:
-1. Acknowledges what they said with genuine warmth (reference their specific words)
-2. Connects to what you know about them from memory
-3. Offers insight, validation, or gentle challenge — whatever fits
-4. Ends naturally (can ask one soft question if helpful)
+1. Acknowledges what they said with genuine warmth and validation (reference their specific words).
+2. Connects to what you know about them from memory (CRITICAL: if 'Relevant memories' list above is empty, do NOT make up or assume any facts about their past, family, or relationships; behave as if this is your very first conversation).
+3. Offers a psychological insight, emotional validation, or gentle reframing of their problem. Help them unpack the root issue.
+4. Ends naturally and comfortably (can ask one soft, self-reflective question if helpful).
 
-Length: 3-6 sentences. No headers. No lists. Write like you truly know them.
-Do NOT start with "I" — vary your openings."""
+Length: 3-6 sentences. No headers. No lists. Write like you truly know them and want to support them as a friend.
+Do NOT start with "I" — vary your openings and focus the conversation on them."""
 
         try:
             response = await run_llq_call(prompt, orchestrator=True, json_mode=False)

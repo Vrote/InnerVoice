@@ -6,13 +6,21 @@
 
 ## 🌟 What is InnerVoice?
 
-InnerVoice looks and feels exactly like a simple chat app. But beneath the surface it runs a **14-tool multi-node AI reasoning loop** that:
+InnerVoice looks and feels exactly like a simple chat app. But beneath the surface it runs a **12-tool multi-node AI reasoning loop** that:
 
-- **Mirrors your writing style** — learns your tone, vocabulary, and sentence patterns
-- **Remembers you across months** — hybrid SQLite + vector semantic memory
-- **Tracks your emotional journey** — mood scoring, emotion detection, pattern analysis
-- **Manages your goals** — detects goals in your messages, tracks progress
-- **Generates monthly self-portraits** — the "Mirror Me" dashboard shows mood trends, key themes, lessons, and a word cloud of your language
+- **Mirrors your writing style** — learns your tone, vocabulary, and sentence patterns.
+- **Remembers you across months** — hybrid SQLite + vector semantic memory.
+- **Tracks your emotional journey** — mood scoring, emotion detection, pattern analysis.
+- **Manages your goals** — detects goals in your messages, tracks progress.
+- **Generates monthly self-portraits & doctor briefs** — the "Mirror Me" dashboard shows a reflection report for the user AND a dedicated Practitioner Insights tab (for doctors/therapists) detailing mood volatility, stressors, coping mechanisms, and cognitive distortions with textual evidence.
+
+---
+
+## 📄 Detailed Documentation & System Design
+
+For a comprehensive explanation of the architecture, features, and deep-dive mechanics (perfect for explaining the project to an interviewer), check out our detailed guides:
+👉 **[PROJECT_INFO_GUIDE.md](file:///c:/Users/hp/Desktop/InnerVoice/PROJECT_INFO_GUIDE.md)** — Overall System Design & Features Manual
+👉 **[AGENTIC_AI_DETAILS.md](file:///c:/Users/hp/Desktop/InnerVoice/AGENTIC_AI_DETAILS.md)** — Agent Loop & Dynamic Tool Execution Details
 
 ---
 
