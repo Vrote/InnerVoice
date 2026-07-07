@@ -131,3 +131,45 @@ When the orchestrator identifies that a message lacks critical context (e.g. *"I
 3. The `reflect_node` catches this, sets `waiting_on_user = True`, and routes straight to `respond_node`.
 4. In `respond_node`, the AI outputs a warm acknowledgment followed by the follow-up question. The database record is set to `processing_status = "waiting_for_user"`.
 5. The frontend chat window intercepts this status and opens an inline chat reply box. The user's reply is posted to `/api/chat/reply`, combining the history together before resuming the full agent reasoning loop.
+
+---
+
+## 💾 6. Retrieval-Augmented Generation (RAG) Flow
+
+InnerVoice utilizes a structured RAG pipeline to ensure that long-term contextual memory is retrieved and injected dynamically into conversation steps.
+
+```
+┌─────────────────┐      Vector Search      ┌──────────────────┐
+│  User Message   ├────────────────────────►│  ChromaDB Store  │
+└────────┬────────┘                         └────────┬─────────┘
+         │                                           │
+         │                                           │ Matches Fetched
+         ▼                                           ▼
+┌─────────────────┐      Augment Prompt     ┌──────────────────┐
+│  LLM Generator  │◄────────────────────────┤ Relevant Context │
+└────────┬────────┘                         └──────────────────┘
+         │
+         ▼
+┌─────────────────┐
+│ AI Reflections  │
+└─────────────────┘
+```
+
+### RAG System Components:
+
+1. **Embedding Generation (`embedding_service.py`)**:
+   * Text is converted into vector representations using the `embed_text` function in [embedding_service.py](file:///c:/Users/hp/Desktop/InnerVoice/backend/services/embedding_service.py).
+   * It makes calls to Groq's embedding engine (or falls back to a zero-vector baseline if offline) to produce 768-dimensional floating-point arrays.
+
+2. **Vector Indexing & Storage (`vector_store.py`)**:
+   * Leverages **ChromaDB** in [vector_store.py](file:///c:/Users/hp/Desktop/InnerVoice/backend/services/vector_store.py) to index and query user memories.
+   * Every time `MemorySaveTool` extracts a permanent fact (e.g. relationship details, fears, career aspirations), it indexes it in the Chroma collection scoped to the user ID.
+
+3. **Semantic Memory Retrieval Tool (`MemoryRetrieveTool`)**:
+   * Invoked dynamically by the LangGraph orchestrator.
+   * It takes the user's message, computes its vector embedding, and queries ChromaDB for the top 5 nearest-neighbor memories.
+
+4. **Prompt Augmentation & Generation (`respond_node`)**:
+   * The retrieved memory snippets are formatted and injected as a text block (`Relevant memories`) inside the final prompt.
+   * This forces the LLM generator to construct a response that naturally references past events, effectively preventing conversational amnesia.
+
