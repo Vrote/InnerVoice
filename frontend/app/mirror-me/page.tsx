@@ -3,12 +3,25 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Sparkles, ArrowLeft, Loader2, RefreshCw, TrendingUp,
-  Brain, Heart, Lightbulb, Star, Cloud, BarChart2, Calendar
+  Brain, Heart, Lightbulb, Star, Cloud, BarChart2, Calendar,
+  Activity, FileText, AlertTriangle
 } from 'lucide-react';
 import api from '@/lib/api';
 import { useAuthStore } from '@/stores/authStore';
 
-// ── Types ─────────────────────────────────────────────────────────────────────
+interface CognitiveDistortion {
+  distortion_type: string;
+  evidence: string;
+}
+
+interface ClinicalInsights {
+  practitioner_summary: string;
+  cognitive_distortions_detected: CognitiveDistortion[];
+  key_stressors: string[];
+  coping_mechanisms_observed: string[];
+  mood_volatility: string;
+}
+
 interface MirrorInsight { title: string; description: string; }
 interface MirrorReport {
   month_summary?: string;
@@ -16,6 +29,7 @@ interface MirrorReport {
   insights?: MirrorInsight[];
   lessons_learned?: string[];
   self_care_recommendations?: string[];
+  clinical_insights?: ClinicalInsights;
   supportive_closing?: string;
   avg_mood?: number;
   total_messages?: number;
@@ -96,6 +110,7 @@ export default function MirrorMePage() {
   // Selected date states
   const [selectedMonth, setSelectedMonth] = useState<number>(new Date().getMonth() + 1);
   const [selectedYear, setSelectedYear]   = useState<number>(new Date().getFullYear());
+  const [activeTab, setActiveTab]         = useState<'reflection' | 'clinical'>('reflection');
 
   const getPastMonths = () => {
     const months = [];
@@ -365,96 +380,236 @@ export default function MirrorMePage() {
               </div>
             </div>
 
-            {/* Mood trend */}
-            {report.mood_trend_description && (
-              <div className="card p-5">
-                <div className="flex items-center gap-2 mb-3">
-                  <TrendingUp className="w-4 h-4 text-violet-400" />
-                  <h3 className="text-sm font-semibold text-white">Mood Journey</h3>
-                </div>
-                <p className="text-sm text-slate-400 leading-relaxed">{report.mood_trend_description}</p>
-              </div>
-            )}
-
-            {/* Insights */}
-            {(report.insights?.length ?? 0) > 0 && (
-              <div className="card p-5">
-                <div className="flex items-center gap-2 mb-4">
-                  <Lightbulb className="w-4 h-4 text-yellow-400" />
-                  <h3 className="text-sm font-semibold text-white">Key Themes</h3>
-                </div>
-                <div className="space-y-4">
-                  {report.insights!.map((ins, i) => (
-                    <div key={i} className="flex gap-3">
-                      <div className="w-6 h-6 rounded-lg bg-violet-500/10 border border-violet-500/20 flex items-center justify-center flex-shrink-0 mt-0.5 text-xs text-violet-400 font-bold">
-                        {i + 1}
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-white mb-1">{ins.title}</p>
-                        <p className="text-xs text-slate-400 leading-relaxed">{ins.description}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Lessons + Self-care */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {(report.lessons_learned?.length ?? 0) > 0 && (
-                <div className="card p-5">
-                  <div className="flex items-center gap-2 mb-3">
-                    <Star className="w-4 h-4 text-amber-400" />
-                    <h3 className="text-sm font-semibold text-white">Lessons Learned</h3>
-                  </div>
-                  <ul className="space-y-2">
-                    {report.lessons_learned!.map((l, i) => (
-                      <li key={i} className="flex items-start gap-2">
-                        <div className="w-1.5 h-1.5 rounded-full bg-amber-500/60 mt-1.5 flex-shrink-0" />
-                        <p className="text-xs text-slate-400 leading-relaxed">{l}</p>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
-              {(report.self_care_recommendations?.length ?? 0) > 0 && (
-                <div className="card p-5">
-                  <div className="flex items-center gap-2 mb-3">
-                    <Heart className="w-4 h-4 text-rose-400" />
-                    <h3 className="text-sm font-semibold text-white">Self-Care Tips</h3>
-                  </div>
-                  <ul className="space-y-2">
-                    {report.self_care_recommendations!.map((r, i) => (
-                      <li key={i} className="flex items-start gap-2">
-                        <div className="w-1.5 h-1.5 rounded-full bg-rose-500/60 mt-1.5 flex-shrink-0" />
-                        <p className="text-xs text-slate-400 leading-relaxed">{r}</p>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
+            {/* Tabs Navigation */}
+            <div className="flex border-b border-white/[0.06] gap-2 p-1">
+              <button
+                onClick={() => setActiveTab('reflection')}
+                className={`flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-xl transition-all ${
+                  activeTab === 'reflection'
+                    ? 'bg-violet-500/15 border border-violet-500/30 text-violet-300'
+                    : 'text-slate-500 hover:text-slate-300'
+                }`}
+              >
+                <Brain className="w-3.5 h-3.5" />
+                Reflection Report
+              </button>
+              <button
+                onClick={() => setActiveTab('clinical')}
+                className={`flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-xl transition-all ${
+                  activeTab === 'clinical'
+                    ? 'bg-violet-500/15 border border-violet-500/30 text-violet-300'
+                    : 'text-slate-500 hover:text-slate-300'
+                }`}
+              >
+                <Activity className="w-3.5 h-3.5" />
+                Practitioner Insights
+              </button>
             </div>
 
-            {/* Word cloud */}
-            {(report.word_cloud?.length ?? 0) > 0 && (
-              <div className="card p-5">
-                <div className="flex items-center gap-2 mb-4">
-                  <Cloud className="w-4 h-4 text-sky-400" />
-                  <h3 className="text-sm font-semibold text-white">Your Language This Month</h3>
+            {activeTab === 'reflection' && (
+              <>
+                {/* Mood trend */}
+                {report.mood_trend_description && (
+                  <div className="card p-5 animate-fadeIn">
+                    <div className="flex items-center gap-2 mb-3">
+                      <TrendingUp className="w-4 h-4 text-violet-400" />
+                      <h3 className="text-sm font-semibold text-white">Mood Journey</h3>
+                    </div>
+                    <p className="text-sm text-slate-400 leading-relaxed">{report.mood_trend_description}</p>
+                  </div>
+                )}
+
+                {/* Insights */}
+                {(report.insights?.length ?? 0) > 0 && (
+                  <div className="card p-5 animate-fadeIn">
+                    <div className="flex items-center gap-2 mb-4">
+                      <Lightbulb className="w-4 h-4 text-yellow-400" />
+                      <h3 className="text-sm font-semibold text-white">Key Themes</h3>
+                    </div>
+                    <div className="space-y-4">
+                      {report.insights!.map((ins, i) => (
+                        <div key={i} className="flex gap-3">
+                          <div className="w-6 h-6 rounded-lg bg-violet-500/10 border border-violet-500/20 flex items-center justify-center flex-shrink-0 mt-0.5 text-xs text-violet-400 font-bold">
+                            {i + 1}
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-white mb-1">{ins.title}</p>
+                            <p className="text-xs text-slate-400 leading-relaxed">{ins.description}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Lessons + Self-care */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 animate-fadeIn">
+                  {(report.lessons_learned?.length ?? 0) > 0 && (
+                    <div className="card p-5">
+                      <div className="flex items-center gap-2 mb-3">
+                        <Star className="w-4 h-4 text-amber-400" />
+                        <h3 className="text-sm font-semibold text-white">Lessons Learned</h3>
+                      </div>
+                      <ul className="space-y-2">
+                        {report.lessons_learned!.map((l, i) => (
+                          <li key={i} className="flex items-start gap-2">
+                            <div className="w-1.5 h-1.5 rounded-full bg-amber-500/60 mt-1.5 flex-shrink-0" />
+                            <p className="text-xs text-slate-400 leading-relaxed">{l}</p>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {(report.self_care_recommendations?.length ?? 0) > 0 && (
+                    <div className="card p-5">
+                      <div className="flex items-center gap-2 mb-3">
+                        <Heart className="w-4 h-4 text-rose-400" />
+                        <h3 className="text-sm font-semibold text-white">Self-Care Tips</h3>
+                      </div>
+                      <ul className="space-y-2">
+                        {report.self_care_recommendations!.map((r, i) => (
+                          <li key={i} className="flex items-start gap-2">
+                            <div className="w-1.5 h-1.5 rounded-full bg-rose-500/60 mt-1.5 flex-shrink-0" />
+                            <p className="text-xs text-slate-400 leading-relaxed">{r}</p>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
                 </div>
-                <WordCloud words={report.word_cloud!} />
-              </div>
+
+                {/* Word cloud */}
+                {(report.word_cloud?.length ?? 0) > 0 && (
+                  <div className="card p-5 animate-fadeIn">
+                    <div className="flex items-center gap-2 mb-4">
+                      <Cloud className="w-4 h-4 text-sky-400" />
+                      <h3 className="text-sm font-semibold text-white">Your Language This Month</h3>
+                    </div>
+                    <WordCloud words={report.word_cloud!} />
+                  </div>
+                )}
+
+                {/* Closing message */}
+                {report.supportive_closing && (
+                  <div className="card p-6 border-violet-500/20 bg-gradient-to-br from-violet-500/5 to-indigo-500/5 animate-fadeIn">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Sparkles className="w-4 h-4 text-violet-400" />
+                      <h3 className="text-sm font-semibold text-violet-300">A note from your InnerVoice</h3>
+                    </div>
+                    <p className="text-sm text-slate-300 leading-relaxed italic">"{report.supportive_closing}"</p>
+                  </div>
+                )}
+              </>
             )}
 
-            {/* Closing message */}
-            {report.supportive_closing && (
-              <div className="card p-6 border-violet-500/20 bg-gradient-to-br from-violet-500/5 to-indigo-500/5">
-                <div className="flex items-center gap-2 mb-3">
-                  <Sparkles className="w-4 h-4 text-violet-400" />
-                  <h3 className="text-sm font-semibold text-violet-300">A note from your InnerVoice</h3>
-                </div>
-                <p className="text-sm text-slate-300 leading-relaxed italic">"{report.supportive_closing}"</p>
+            {activeTab === 'clinical' && (
+              <div className="space-y-5 animate-fadeIn">
+                {report.clinical_insights ? (
+                  <>
+                    {/* Practitioner Summary Card */}
+                    <div className="card p-5">
+                      <div className="flex items-center gap-2 mb-3">
+                        <FileText className="w-4 h-4 text-violet-400" />
+                        <h3 className="text-sm font-semibold text-white">Practitioner Clinical Summary</h3>
+                      </div>
+                      <p className="text-sm text-slate-300 leading-relaxed">
+                        {report.clinical_insights.practitioner_summary}
+                      </p>
+                      
+                      <div className="mt-4 pt-4 border-t border-white/[0.05] flex items-center justify-between">
+                        <span className="text-xs text-slate-500 font-medium">Calculated Mood Volatility:</span>
+                        <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${
+                          report.clinical_insights.mood_volatility === 'High' 
+                            ? 'bg-rose-500/10 border border-rose-500/20 text-rose-400'
+                            : report.clinical_insights.mood_volatility === 'Moderate'
+                            ? 'bg-amber-500/10 border border-amber-500/20 text-amber-400'
+                            : 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-400'
+                        }`}>
+                          {report.clinical_insights.mood_volatility} Volatility
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Stressors & Coping Grid */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {/* Key Stressors */}
+                      <div className="card p-5">
+                        <div className="flex items-center gap-2 mb-3">
+                          <AlertTriangle className="w-4 h-4 text-amber-400" />
+                          <h3 className="text-sm font-semibold text-white">Identified Stressors</h3>
+                        </div>
+                        <ul className="space-y-2">
+                          {report.clinical_insights.key_stressors?.map((st, i) => (
+                            <li key={i} className="flex items-start gap-2">
+                              <div className="w-1.5 h-1.5 rounded-full bg-amber-500/60 mt-1.5 flex-shrink-0" />
+                              <p className="text-xs text-slate-400 leading-relaxed">{st}</p>
+                            </li>
+                          ))}
+                          {(!report.clinical_insights.key_stressors || report.clinical_insights.key_stressors.length === 0) && (
+                            <p className="text-xs text-slate-500 italic">No significant stressors identified.</p>
+                          )}
+                        </ul>
+                      </div>
+
+                      {/* Coping Mechanisms */}
+                      <div className="card p-5">
+                        <div className="flex items-center gap-2 mb-3">
+                          <Heart className="w-4 h-4 text-emerald-400" />
+                          <h3 className="text-sm font-semibold text-white">Observed Coping Behaviors</h3>
+                        </div>
+                        <ul className="space-y-2">
+                          {report.clinical_insights.coping_mechanisms_observed?.map((cm, i) => (
+                            <li key={i} className="flex items-start gap-2">
+                              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500/60 mt-1.5 flex-shrink-0" />
+                              <p className="text-xs text-slate-400 leading-relaxed">{cm}</p>
+                            </li>
+                          ))}
+                          {(!report.clinical_insights.coping_mechanisms_observed || report.clinical_insights.coping_mechanisms_observed.length === 0) && (
+                            <p className="text-xs text-slate-500 italic">No coping behaviors logged.</p>
+                          )}
+                        </ul>
+                      </div>
+                    </div>
+
+                    {/* Cognitive Distortions / Thinking Patterns */}
+                    <div className="card p-5">
+                      <div className="flex items-center gap-2 mb-4">
+                        <Brain className="w-4 h-4 text-sky-400" />
+                        <h3 className="text-sm font-semibold text-white">Cognitive Patterns & Distortions</h3>
+                      </div>
+                      
+                      <div className="space-y-4">
+                        {report.clinical_insights.cognitive_distortions_detected?.map((dist, i) => (
+                          <div key={i} className="flex gap-3">
+                            <div className="w-6 h-6 rounded-lg bg-sky-500/10 border border-sky-500/20 flex items-center justify-center flex-shrink-0 mt-0.5 text-xs text-sky-400 font-bold">
+                              {i + 1}
+                            </div>
+                            <div>
+                              <p className="text-sm font-medium text-white mb-1">{dist.distortion_type}</p>
+                              <p className="text-xs text-slate-400 leading-relaxed">{dist.evidence}</p>
+                            </div>
+                          </div>
+                        ))}
+                        {(!report.clinical_insights.cognitive_distortions_detected || report.clinical_insights.cognitive_distortions_detected.length === 0) && (
+                          <p className="text-xs text-slate-500 italic">No distinct cognitive distortions detected this month.</p>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Disclaimer card */}
+                    <div className="card p-4 border-slate-500/10 bg-slate-500/5">
+                      <p className="text-[11px] text-slate-500 leading-relaxed">
+                        <strong>Clinical Disclaimer:</strong> This section uses clinical language and psychological analysis models (such as detecting Cognitive Distortions) to synthesize your reflections. It is intended to help you and your healthcare professional/therapist better analyze patterns in your mood and mental health. This is not a diagnosis. Please review these insights together with your certified provider.
+                      </p>
+                    </div>
+                  </>
+                ) : (
+                  <div className="card p-8 text-center space-y-3">
+                    <p className="text-sm text-slate-400">Clinical insights are not available for this report.</p>
+                    <p className="text-xs text-slate-600">This report was generated with an older version of the prompt. Click "Refresh with latest chats" or "Regenerate Report" below to generate clinical insights.</p>
+                  </div>
+                )}
               </div>
             )}
 

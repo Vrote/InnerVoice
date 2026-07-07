@@ -68,6 +68,50 @@ const emotionColor: Record<string, string> = {
   neutral: 'text-slate-400',
 };
 
+// ── Time & Date formatting helpers ───────────────────────────────────────────
+const formatTime = (dateInput: Date | string) => {
+  const d = new Date(dateInput);
+  if (isNaN(d.getTime())) return "";
+  let hours = d.getHours();
+  const minutes = d.getMinutes();
+  const ampm = hours >= 12 ? 'PM' : 'AM';
+  hours = hours % 12;
+  hours = hours ? hours : 12; // the hour '0' should be '12'
+  const minStr = minutes < 10 ? '0' + minutes : minutes;
+  return `${hours}:${minStr} ${ampm}`;
+};
+
+const formatDateDivider = (dateInput: Date | string) => {
+  const d = new Date(dateInput);
+  if (isNaN(d.getTime())) return "";
+  
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const yesterday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
+  const msgDate = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  
+  if (msgDate.getTime() === today.getTime()) {
+    return "Today";
+  }
+  if (msgDate.getTime() === yesterday.getTime()) {
+    return "Yesterday";
+  }
+  
+  const diffTime = today.getTime() - msgDate.getTime();
+  const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+  if (diffDays < 7) {
+    return d.toLocaleDateString('en-US', { weekday: 'long' });
+  }
+  
+  const day = d.getDate();
+  const month = d.toLocaleDateString('en-US', { month: 'short' });
+  const year = d.getFullYear();
+  if (year === now.getFullYear()) {
+    return `${day} ${month}`;
+  }
+  return `${day} ${month} ${year}`;
+};
+
 // ── AI Bubble component ───────────────────────────────────────────────────────
 function AIBubble({ msg, onReply }: { msg: ChatMessage; onReply?: (q: string) => void }) {
   const { displayed, done } = useTypewriter(msg.content, 16, msg.isTyping ?? false);
@@ -101,6 +145,13 @@ function AIBubble({ msg, onReply }: { msg: ChatMessage; onReply?: (q: string) =>
               </span>
             ))}
           </div>
+
+          {/* Timestamp */}
+          {(!msg.isTyping || done) && (
+            <span className="text-xs text-white/25 select-none pr-1 mt-0.5 self-end">
+              {formatTime(msg.timestamp)}
+            </span>
+          )}
 
           {done && msg.coping_suggestion?.show && (
             <CopingToolkit suggestion={msg.coping_suggestion} />
@@ -510,20 +561,52 @@ export default function ChatPage() {
           )}
 
           {/* Message bubbles */}
-          {messages.map(msg => (
-            <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-              {msg.role === 'user' ? (
-                <div className="bubble-user animate-fadeIn">{msg.content}</div>
-              ) : msg.content === '' && msg.isTyping ? (
-                <ThinkingIndicator />
-              ) : (
-                <AIBubble
-                  msg={msg}
-                  onReply={handleFollowupReply}
-                />
-              )}
-            </div>
-          ))}
+          {(() => {
+            let lastDateStr = "";
+            return messages.map((msg) => {
+              const msgDate = new Date(msg.timestamp);
+              const dateStr = msgDate.toDateString();
+              
+              let showDivider = false;
+              let dividerLabel = "";
+              
+              if (dateStr !== lastDateStr) {
+                showDivider = true;
+                dividerLabel = formatDateDivider(msg.timestamp);
+                lastDateStr = dateStr;
+              }
+              
+              return (
+                <div key={msg.id} className="w-full flex flex-col">
+                  {showDivider && dividerLabel && (
+                    <div className="flex items-center justify-center my-6 text-white/20 text-xs select-none">
+                      <span className="flex-1 border-t border-white/[0.05] max-w-[80px]"></span>
+                      <span className="mx-4">{dividerLabel}</span>
+                      <span className="flex-1 border-t border-white/[0.05] max-w-[80px]"></span>
+                    </div>
+                  )}
+                  
+                  <div className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} mb-4`}>
+                    {msg.role === 'user' ? (
+                      <div className="flex flex-col items-end max-w-[70%]">
+                        <div className="bubble-user animate-fadeIn">{msg.content}</div>
+                        <span className="text-xs text-white/25 mt-1 select-none pr-1">
+                          {formatTime(msg.timestamp)}
+                        </span>
+                      </div>
+                    ) : msg.content === '' && msg.isTyping ? (
+                      <ThinkingIndicator />
+                    ) : (
+                      <AIBubble
+                        msg={msg}
+                        onReply={handleFollowupReply}
+                      />
+                    )}
+                  </div>
+                </div>
+              );
+            });
+          })()}
 
           <div ref={bottomRef} />
         </div>

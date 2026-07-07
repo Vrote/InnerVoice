@@ -63,7 +63,7 @@ async def get_or_generate_mirror_me_report(user_id: str, month: int, year: int, 
 
         avg_mood = sum(em.mood_score for em in emotions) / len(emotions) if emotions else 5.0
 
-        prompt = f"""You are a senior psychologist and linguistic analyst writing a monthly reflection report called 'Mirror Me'.
+        prompt = f"""You are a senior psychologist and linguistic analyst writing a monthly reflection report called 'Mirror Me' that is designed to help the user reflect, but also serve as a structured resource for their doctor, therapist, or psychologist to analyze their mental health.
 Generate a beautiful, personalized, and deep monthly analysis.
 
 Message history for the month:
@@ -93,6 +93,23 @@ Return ONLY valid JSON:
     "Tip 1...",
     "Tip 2..."
   ],
+  "clinical_insights": {{
+    "practitioner_summary": "A concise, professional summary formatted for a doctor/therapist (using clinical terminology where appropriate) summarizing current presentation, main stressors, and emotional themes.",
+    "cognitive_distortions_detected": [
+      {{
+        "distortion_type": "Name of pattern (e.g., Catastrophizing, All-or-Nothing Thinking, Mind Reading, Emotional Reasoning)",
+        "evidence": "Brief explanation of where or how this manifested in their messages."
+      }}
+    ],
+    "key_stressors": [
+      "Stressor 1...",
+      "Stressor 2..."
+    ],
+    "coping_mechanisms_observed": [
+      "Observed healthy or unhealthy coping mechanism (e.g., mindfulness, cognitive reframing, avoidance, rumination)..."
+    ],
+    "mood_volatility": "Low / Moderate / High"
+  }},
   "supportive_closing": "A warm, voice-matched closing message from their inner reflection companion."
 }}"""
 
