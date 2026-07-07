@@ -265,10 +265,5 @@ NEXT_PUBLIC_API_URL=http://localhost:8000
 
 ---
 
-## 📄 License
-
-MIT License — feel free to fork, modify, and build on top of InnerVoice.
-
----
 
 <p align="center">Built with ❤️ using LangGraph, FastAPI & Next.js</p>
