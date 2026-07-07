@@ -18,6 +18,7 @@ from backend.database.connection import get_db
 from backend.database.models import Message, FollowupTurn, User
 from backend.core.security import get_current_user_id
 from backend.agent.reasoning_loop import run_agent
+from backend.utils.coping_utils import get_coping_suggestion
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/chat", tags=["chat"])
@@ -130,17 +131,23 @@ async def send_chat_message(
 
         final_state = await run_agent(initial_state)
 
+        # Build coping suggestion from detected emotion
+        emotions_detected = final_state.get("emotions_detected", {})
+        primary_emotion   = emotions_detected.get("primary_emotion", "") if isinstance(emotions_detected, dict) else ""
+        coping_suggestion = get_coping_suggestion(primary_emotion)
+
         return {
             "success": True,
             "data": {
-                "message_id":       message_id,
-                "response":         final_state.get("final_response", ""),
-                "status":           "waiting_for_user" if final_state.get("waiting_on_user") else "done",
+                "message_id":        message_id,
+                "response":          final_state.get("final_response", ""),
+                "status":            "waiting_for_user" if final_state.get("waiting_on_user") else "done",
                 "followup_question": final_state.get("followup_question", "") if final_state.get("waiting_on_user") else None,
-                "emotions":         final_state.get("emotions_detected", {}),
-                "tools_used":       final_state.get("tools_used", []),
-                "reasoning_log":    final_state.get("reasoning_log", []),
-                "crisis_level":     final_state.get("crisis_level", "none"),
+                "emotions":          emotions_detected,
+                "tools_used":        final_state.get("tools_used", []),
+                "reasoning_log":     final_state.get("reasoning_log", []),
+                "crisis_level":      final_state.get("crisis_level", "none"),
+                "coping_suggestion": coping_suggestion,
             },
             "error": None
         }
@@ -233,15 +240,21 @@ async def reply_to_followup(
 
         final_state = await run_agent(initial_state)
 
+        # Build coping suggestion from detected emotion
+        emotions_detected = final_state.get("emotions_detected", {})
+        primary_emotion   = emotions_detected.get("primary_emotion", "") if isinstance(emotions_detected, dict) else ""
+        coping_suggestion = get_coping_suggestion(primary_emotion)
+
         return {
             "success": True,
             "data": {
                 "message_id":    message_id,
                 "response":      final_state.get("final_response", ""),
                 "status":        "done",
-                "emotions":      final_state.get("emotions_detected", {}),
+                "emotions":      emotions_detected,
                 "tools_used":    final_state.get("tools_used", []),
                 "crisis_level":  final_state.get("crisis_level", "none"),
+                "coping_suggestion": coping_suggestion,
             },
             "error": None
         }

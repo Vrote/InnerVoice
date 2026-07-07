@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import api from '@/lib/api';
 import { useAuthStore } from '@/stores/authStore';
+import CopingToolkit from '@/components/chat/CopingToolkit';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface Emotion {
@@ -27,6 +28,13 @@ interface ChatMessage {
   status?: string;
   crisis_level?: string;
   isTyping?: boolean;
+  coping_suggestion?: {
+    show: boolean;
+    emotion?: string;
+    exercise_type?: 'breathing' | 'gratitude' | 'bodyscan';
+    title?: string;
+    subtitle?: string;
+  };
 }
 
 // ── Typewriter hook ───────────────────────────────────────────────────────────
@@ -93,6 +101,10 @@ function AIBubble({ msg, onReply }: { msg: ChatMessage; onReply?: (q: string) =>
               </span>
             ))}
           </div>
+
+          {done && msg.coping_suggestion?.show && (
+            <CopingToolkit suggestion={msg.coping_suggestion} />
+          )}
 
           {/* Crisis badge */}
           {msg.crisis_level && msg.crisis_level !== 'none' && (
@@ -319,6 +331,7 @@ export default function ChatPage() {
               followup_question: data.followup_question ?? null,
               status:           data.status ?? 'done',
               crisis_level:     data.crisis_level ?? 'none',
+              coping_suggestion: data.coping_suggestion,
               isTyping:         true,
             }
           : m.id === tmpUserId
@@ -361,6 +374,7 @@ export default function ChatPage() {
               tools_used:   data.tools_used ?? [],
               status:       'done',
               crisis_level: data.crisis_level ?? 'none',
+              coping_suggestion: data.coping_suggestion,
               isTyping:     true,
             }
           : m
